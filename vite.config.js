@@ -6,5 +6,5 @@ import react from '@vitejs/plugin-react'
 // Si vas a usar Vercel/Netlify en vez de GitHub Pages, poné base: './'
 export default defineConfig({
   plugins: [react()],
-  base: process.env.NODE_ENV === 'production' ? '/cuyin-aprende/' : '/'
+  base: process.env.NODE_ENV === 'production' ? '/CUYIN-APRENDE/' : '/'
 })
