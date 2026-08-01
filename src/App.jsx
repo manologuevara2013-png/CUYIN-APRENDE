@@ -50,7 +50,26 @@ const audio = {
   levelUp() { this.tone(523.25,0.12); this.tone(659.25,0.12,0.1); this.tone(783.99,0.12,0.2); this.tone(1046.5,0.25,0.3); },
 };
 
-const letterSound = (l) => ({A:'aaaaa',E:'eeeee',I:'iiiii',O:'ooooo',U:'uuuuu',M:'mmmmm',N:'nnnnn',S:'ssssss',F:'fffff',L:'lllll',R:'rrrrr',P:'pa pe pi po pu',T:'ta te ti to tu',D:'da de di do du',B:'ba be bi bo bu',V:'va ve vi vo vu',Y:'ya ye yi yo yu',RR:'rrrrrr fuerte'})[l] || l;
+const letterSound = (l) => ({
+  A:'Aaa. La A, como en anillo.',
+  E:'Eee. La E, como en escarapela.',
+  I:'Iii. La I, como en iguana.',
+  O:'Ooo. La O, como en ojota.',
+  U:'Uuu. La U, como en ukelele.',
+  M:'Mmm, ma. La eme.',
+  N:'Nnn, na. La ene.',
+  S:'Sss, sa. La ese.',
+  F:'Fff, fa. La efe.',
+  L:'Lll, la. La ele.',
+  R:'Rrr suave, ra. La ere.',
+  P:'P, pa. La pe.',
+  T:'T, ta. La te.',
+  D:'D, da. La de.',
+  B:'B, ba. La be.',
+  V:'V, va. La uve.',
+  Y:'Sh, ya. La ye.',
+  RR:'Rrr fuerte, rra. La erre doble.',
+})[l] || l;
 
 const REF_WORD = { A:'ANILLO', E:'ESCARAPELA', I:'IGUANA', O:'OJOTA', U:'UKELELE' };
 
@@ -102,23 +121,43 @@ const GAME = {
           {word:'UÑA',starts:true},{word:'ELEFANTE',starts:false},
         ]},
       ]},
-      { id:'m6', name:'Números del 1 al 10', activities:[
-        { type:'numberIntro', number:1 },{ type:'numberIntro', number:3 },
-        { type:'numberIntro', number:5 },{ type:'numberIntro', number:8 },
-        { type:'countObjects', object:'grape', answer:4 },
-        { type:'countObjects', object:'sun', answer:7 },
-        { type:'numberDictation', target:5, options:[3,5,8] },
-        { type:'numberDictation', target:9, options:[9,6,2] },
+      { id:'m6', name:'Números 1 al 5', activities:[
+        { type:'numberIntro', number:1 },
+        { type:'numberIntro', number:2 },
+        { type:'numberIntro', number:3 },
+        { type:'numberIntro', number:4 },
+        { type:'numberIntro', number:5 },
+        { type:'countObjects', object:'grape', answer:3 },
+        { type:'countObjects', object:'sun', answer:5 },
+        { type:'numberDictation', target:4, options:[2,4,5] },
       ]},
-      { id:'m7', name:'Del 11 al 20 y comparar', activities:[
-        { type:'numberIntro', number:12 },{ type:'numberIntro', number:17 },
+      { id:'m7', name:'Números 6 al 10', activities:[
+        { type:'numberIntro', number:6 },
+        { type:'numberIntro', number:7 },
+        { type:'numberIntro', number:8 },
+        { type:'numberIntro', number:9 },
+        { type:'numberIntro', number:10 },
+        { type:'countObjects', object:'grape', answer:7 },
+        { type:'countObjects', object:'sun', answer:9 },
+        { type:'numberDictation', target:8, options:[6,8,10] },
+      ]},
+      { id:'m8', name:'Del 11 al 20', activities:[
+        { type:'numberIntro', number:11 },
+        { type:'numberIntro', number:12 },
+        { type:'numberIntro', number:15 },
+        { type:'numberIntro', number:17 },
         { type:'numberIntro', number:20 },
-        { type:'compareNumbers', a:8, b:12 },
-        { type:'compareNumbers', a:15, b:9 },
-        { type:'compareNumbers', a:20, b:8 },
         { type:'numberDictation', target:15, options:[12,15,17] },
-        { type:'orderNumbers', numbers:[7,12,4,18], direction:'asc' },
-        { type:'orderNumbers', numbers:[13,6,19,10], direction:'desc' },
+      ]},
+      { id:'m9', name:'Comparar y ordenar', activities:[
+        { type:'compareNumbers', a:3, b:7 },
+        { type:'compareNumbers', a:8, b:4 },
+        { type:'compareNumbers', a:10, b:6 },
+        { type:'compareNumbers', a:15, b:9 },
+        { type:'compareNumbers', a:20, b:13 },
+        { type:'orderNumbers', numbers:[3,7,1,5], direction:'asc' },
+        { type:'orderNumbers', numbers:[9,2,6,4], direction:'asc' },
+        { type:'orderNumbers', numbers:[10,3,8,5], direction:'desc' },
       ]},
     ]},
     { id:'uco', name:'Valle de Uco', subtitle:'Abril · Letras M P L S + suma', x:25, y:42, unlocked:false, lessons:[
@@ -127,10 +166,16 @@ const GAME = {
         { type:'findLetter', target:'M', grid:['A','M','O','M','P','M','E','M','U'] },
         { type:'wordMatch', word:'MAMÁ', image:'heart', options:['MAMÁ','PAPÁ','LOLA'] },
       ]},
+      { id:'a1b', name:'Sílabas con M', activities:[
+        { type:'syllableTable', letter:'M', syllables:['MA','ME','MI','MO','MU'] },
+      ]},
       { id:'a2', name:'La letra P', activities:[
         { type:'letterIntro', letter:'P', hint:'como una explosioncita' },
         { type:'findLetter', target:'P', grid:['P','A','P','M','O','P','I','P','E'] },
         { type:'wordMatch', word:'PAPÁ', image:'gaucho', options:['PAPÁ','MAMÁ','PIPA'] },
+      ]},
+      { id:'a2b', name:'Sílabas con P', activities:[
+        { type:'syllableTable', letter:'P', syllables:['PA','PE','PI','PO','PU'] },
       ]},
       { id:'a3', name:'Tirar el dado', activities:[
         { type:'diceRoll', target:3 },
@@ -144,10 +189,16 @@ const GAME = {
         { type:'findLetter', target:'L', grid:['L','A','L','O','E','L','I','L','U'] },
         { type:'wordMatch', word:'LUNA', image:'luna', options:['LUNA','SOL','MESA'] },
       ]},
+      { id:'a4b', name:'Sílabas con L', activities:[
+        { type:'syllableTable', letter:'L', syllables:['LA','LE','LI','LO','LU'] },
+      ]},
       { id:'a5', name:'La letra S', activities:[
         { type:'letterIntro', letter:'S', hint:'como una serpiente' },
         { type:'findLetter', target:'S', grid:['S','A','O','S','E','S','I','S','U'] },
         { type:'wordMatch', word:'SOL', image:'sun', options:['SOL','LUNA','PATO'] },
+      ]},
+      { id:'a5b', name:'Sílabas con S', activities:[
+        { type:'syllableTable', letter:'S', syllables:['SA','SE','SI','SO','SU'] },
       ]},
       { id:'a6', name:'Cartas que suman 10', activities:[
         { type:'sumsToTen', a:7 },
@@ -163,15 +214,24 @@ const GAME = {
         { type:'findLetter', target:'T', grid:['T','A','T','M','T','O','T','E','U'] },
         { type:'wordMatch', word:'TOMATE', image:'tomate', options:['TOMATE','MAMÁ','SOL'] },
       ]},
+      { id:'my1b', name:'Sílabas con T', activities:[
+        { type:'syllableTable', letter:'T', syllables:['TA','TE','TI','TO','TU'] },
+      ]},
       { id:'my2', name:'La letra D', activities:[
         { type:'letterIntro', letter:'D', hint:'la lengua atrás de los dientes' },
         { type:'findLetter', target:'D', grid:['D','A','O','D','E','D','I','D','U'] },
         { type:'wordMatch', word:'DEDO', image:'dedo', options:['DEDO','LUNA','SOL'] },
       ]},
+      { id:'my2b', name:'Sílabas con D', activities:[
+        { type:'syllableTable', letter:'D', syllables:['DA','DE','DI','DO','DU'] },
+      ]},
       { id:'my3', name:'La letra N', activities:[
         { type:'letterIntro', letter:'N', hint:'sonido nasal' },
         { type:'findLetter', target:'N', grid:['N','A','N','O','E','N','I','N','U'] },
         { type:'wordMatch', word:'NIDO', image:'nido', options:['NIDO','MESA','FOCA'] },
+      ]},
+      { id:'my3b', name:'Sílabas con N', activities:[
+        { type:'syllableTable', letter:'N', syllables:['NA','NE','NI','NO','NU'] },
       ]},
       { id:'my4', name:'Sumar con historia', activities:[
         { type:'simpleAdd', a:3, b:4, object:'tapita', who:'Pedro' },
@@ -616,6 +676,7 @@ function LessonScreen({ lesson, activityIdx, playerName, onComplete, onExit }) {
       {a.type==='initialSoundMatch' && <InitialSoundMatch key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
       {a.type==='diceRoll' && <DiceRoll key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
       {a.type==='sumsToTen' && <SumsToTen key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
+      {a.type==='syllableTable' && <SyllableTable key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
       {a.type==='numberDictation' && <NumberDictation key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
       {a.type==='orderNumbers' && <OrderNumbers key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
     </div>
@@ -663,13 +724,13 @@ function NumberDictation({ activity, onDone }) {
   const [ans, setAns] = useState(null);
   const shuf = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
   useEffect(() => {
-    const t = setTimeout(() => audio.speak(`Tocá el número ${target}`, {rate:0.65}), 400);
+    const t = setTimeout(() => audio.speak(`Tocá el número ${target}`, {rate:0.6}), 400);
     return () => clearTimeout(t);
   }, []);
   return (
     <div style={{textAlign:'center'}}>
       <SpeechBubbleAuto>Escuchá y tocá el número que digo</SpeechBubbleAuto>
-      <button onClick={() => audio.speak(String(target), {rate:0.55})} style={{margin:'16px 0',background:'#FFE4B5',border:'3px solid #FFB84D',borderRadius:20,padding:'12px 20px',fontSize:16,color:'#7B3F00',fontWeight:700,fontFamily:'Fredoka, sans-serif'}}>
+      <button onClick={() => audio.speak(String(target), {rate:0.5})} style={{margin:'16px 0',background:'#FFE4B5',border:'3px solid #FFB84D',borderRadius:20,padding:'12px 20px',fontSize:16,color:'#7B3F00',fontWeight:700,fontFamily:'Fredoka, sans-serif'}}>
         🔊 Escuchar de nuevo
       </button>
       <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,margin:'20px 0'}}>
@@ -678,13 +739,123 @@ function NumberDictation({ activity, onDone }) {
           return (
             <button key={n} onClick={() => {
               setAns(n);
-              audio.speak(String(n), {rate:0.65});
-              if (n===target) { setTimeout(() => { audio.correct(); audio.speak(`¡Sí! Es el ${target}`, {rate:0.7}); }, 500); setTimeout(onDone, 1600); }
+              audio.speak(String(n), {rate:0.6});
+              if (n===target) { setTimeout(() => { audio.correct(); audio.speak(`¡Sí! Es el ${target}`, {rate:0.65}); }, 500); setTimeout(onDone, 1600); }
               else { setTimeout(() => { audio.wrong(); setAns(null); }, 800); }
             }} style={{aspectRatio:'1',borderRadius:20,fontSize:40,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#1F4E7B',border:'3px solid '+(r?'#2E7D32':'#5D9EC7'),animation: w?'shake 0.4s':'none'}}>{n}</button>
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function SyllableTable({ activity, onDone }) {
+  const { letter, syllables } = activity;
+  const [phase, setPhase] = useState('listen'); // listen, quiz
+  const [listenIdx, setListenIdx] = useState(0);
+  const [quizTarget, setQuizTarget] = useState(null);
+  const [quizAns, setQuizAns] = useState(null);
+  const [quizCount, setQuizCount] = useState(0);
+  const quizTotal = 3;
+
+  // Fase 1: escuchar las 5 sílabas una por una
+  useEffect(() => {
+    if (phase === 'listen' && listenIdx < syllables.length) {
+      const t = setTimeout(() => {
+        audio.speak(syllables[listenIdx], {rate:0.55});
+      }, listenIdx === 0 ? 800 : 400);
+      return () => clearTimeout(t);
+    }
+  }, [phase, listenIdx]);
+
+  const nextListen = () => {
+    audio.tap();
+    if (listenIdx + 1 < syllables.length) {
+      setListenIdx(listenIdx + 1);
+    } else {
+      setPhase('quiz');
+      const t = syllables[Math.floor(Math.random() * syllables.length)];
+      setQuizTarget(t);
+      setTimeout(() => audio.speak(`Ahora tocá la que digo. ${t}`, {rate:0.6}), 500);
+    }
+  };
+
+  const handleQuizTap = (syl) => {
+    setQuizAns(syl);
+    audio.speak(syl, {rate:0.55});
+    if (syl === quizTarget) {
+      audio.correct();
+      const next = quizCount + 1;
+      setQuizCount(next);
+      if (next >= quizTotal) {
+        setTimeout(() => { audio.speak('¡Excelente! Sabés las sílabas.', {rate:0.65}); onDone(); }, 800);
+      } else {
+        setTimeout(() => {
+          setQuizAns(null);
+          const remaining = syllables.filter(s => s !== quizTarget);
+          const newTarget = remaining[Math.floor(Math.random() * remaining.length)];
+          setQuizTarget(newTarget);
+          audio.speak(`Muy bien. Ahora tocá... ${newTarget}`, {rate:0.6});
+        }, 900);
+      }
+    } else {
+      audio.wrong();
+      setTimeout(() => { setQuizAns(null); audio.speak(quizTarget, {rate:0.5}); }, 700);
+    }
+  };
+
+  return (
+    <div style={{textAlign:'center'}}>
+      {phase === 'listen' ? (
+        <>
+          <SpeechBubbleAuto>Escuchá las sílabas con la <b>{letter}</b>. Tocá cada una.</SpeechBubbleAuto>
+          <div style={{display:'flex',justifyContent:'center',gap:8,margin:'20px 0',flexWrap:'wrap'}}>
+            {syllables.map((syl, i) => (
+              <button key={syl}
+                onClick={() => { if (i === listenIdx) { audio.speak(syl, {rate:0.55}); } }}
+                style={{
+                  width:72,height:72,borderRadius:18,fontSize:26,fontWeight:700,
+                  background: i < listenIdx ? '#4CAF50' : i === listenIdx ? '#FFD700' : '#FFE4B5',
+                  color: i < listenIdx ? 'white' : '#7B3F00',
+                  border: i === listenIdx ? '4px solid #B84A00' : '2px solid #FFB84D',
+                  boxShadow: i === listenIdx ? '0 0 20px #FFD700' : 'none',
+                  opacity: i > listenIdx ? 0.4 : 1,
+                }}>{syl}</button>
+            ))}
+          </div>
+          <div style={{fontSize:16,fontWeight:700,color:'#B84A00',marginBottom:12}}>
+            {syllables[listenIdx]}
+          </div>
+          <button className="btn-primary" onClick={nextListen}>
+            {listenIdx + 1 < syllables.length ? `Siguiente → ${syllables[listenIdx + 1]}` : '¡Ahora a jugar!'}
+          </button>
+        </>
+      ) : (
+        <>
+          <SpeechBubbleAuto>Tocá la sílaba que digo</SpeechBubbleAuto>
+          <button onClick={() => audio.speak(quizTarget, {rate:0.5})} style={{margin:'14px 0',background:'#FFE4B5',border:'3px solid #FFB84D',borderRadius:20,padding:'12px 20px',fontSize:16,color:'#7B3F00',fontWeight:700,fontFamily:'Fredoka, sans-serif'}}>
+            🔊 Escuchar de nuevo
+          </button>
+          <div style={{fontSize:13,color:'#7B3F00',marginBottom:8}}>{quizCount} de {quizTotal}</div>
+          <div style={{display:'flex',justifyContent:'center',gap:10,flexWrap:'wrap'}}>
+            {syllables.map(syl => {
+              const r = quizAns === syl && syl === quizTarget;
+              const w = quizAns === syl && syl !== quizTarget;
+              return (
+                <button key={syl} onClick={() => handleQuizTap(syl)}
+                  style={{
+                    width:80,height:80,borderRadius:20,fontSize:28,fontWeight:700,
+                    background: r ? 'linear-gradient(135deg,#7FD858,#4CAF50)' : w ? '#FFCCCC' : '#FFE4B5',
+                    color: r ? 'white' : '#7B3F00',
+                    border: r ? '3px solid #2E7D32' : '3px solid #FFB84D',
+                    animation: w ? 'shake 0.4s' : 'none',
+                  }}>{syl}</button>
+              );
+            })}
+          </div>
+        </>
+      )}
     </div>
   );
 }
@@ -729,7 +900,7 @@ function LetterIntro({ activity, onDone }) {
   return (
     <div style={{textAlign:'center',padding:10}}>
       <SpeechBubbleAuto>Esta es la letra <b>{activity.letter}</b>, {activity.hint}. ¡Tocala!</SpeechBubbleAuto>
-      <button onClick={() => { setT(true); audio.speak(`Letra ${activity.letter}. ${letterSound(activity.letter)}. Como en ${REF_WORD[activity.letter] || activity.letter}`, {rate:0.85}); }}
+      <button onClick={() => { setT(true); audio.speak(letterSound(activity.letter), {rate:0.6}); }}
         style={{background:'transparent',border:'none',margin:'20px 0'}}>
         <div style={{width:180,height:180,borderRadius:'50%',background: t?'radial-gradient(circle,#FFE4B5 0%,#FFB84D 100%)':'radial-gradient(circle,#FFF8ED 0%,#FFE4B5 100%)',boxShadow: t?'0 0 40px #FFB84D':'0 4px 20px rgba(0,0,0,0.1)',transition:'all 0.3s',display:'flex',alignItems:'center',justifyContent:'center',animation: t?'pop 0.4s':'none'}}>
           <span style={{fontSize: activity.letter.length>1?90:120,fontWeight:700,color:'#B84A00',lineHeight:1}}>{activity.letter}</span>
