@@ -30,7 +30,7 @@ const audio = {
     window.speechSynthesis.cancel();
     const u = new SpeechSynthesisUtterance(t);
     if (this.voice) u.voice = this.voice;
-    u.lang = 'es-AR'; u.rate = o.rate || 0.95; u.pitch = o.pitch || 1.15;
+    u.lang = 'es-AR'; u.rate = o.rate || 0.75; u.pitch = o.pitch || 1.05;
     window.speechSynthesis.speak(u);
   },
   tone(f, d, dl=0) {
@@ -107,6 +107,8 @@ const GAME = {
         { type:'numberIntro', number:5 },{ type:'numberIntro', number:8 },
         { type:'countObjects', object:'grape', answer:4 },
         { type:'countObjects', object:'sun', answer:7 },
+        { type:'numberDictation', target:5, options:[3,5,8] },
+        { type:'numberDictation', target:9, options:[9,6,2] },
       ]},
       { id:'m7', name:'Del 11 al 20 y comparar', activities:[
         { type:'numberIntro', number:12 },{ type:'numberIntro', number:17 },
@@ -114,6 +116,9 @@ const GAME = {
         { type:'compareNumbers', a:8, b:12 },
         { type:'compareNumbers', a:15, b:9 },
         { type:'compareNumbers', a:20, b:8 },
+        { type:'numberDictation', target:15, options:[12,15,17] },
+        { type:'orderNumbers', numbers:[7,12,4,18], direction:'asc' },
+        { type:'orderNumbers', numbers:[13,6,19,10], direction:'desc' },
       ]},
     ]},
     { id:'uco', name:'Valle de Uco', subtitle:'Abril · Letras M P L S + suma', x:25, y:42, unlocked:false, lessons:[
@@ -280,17 +285,38 @@ const PROFILE_COLORS = ['#FF9147','#4CAF50','#5D9EC7','#B8332F','#7D3D7D','#F4A6
 
 function newProfile(name, age, colorIdx) {
   return {
-    id: Date.now() + Math.random(),
+    id: `p-${Date.now()}-${Math.floor(Math.random()*10000)}`,
     name: name.trim(), age: age || null,
     color: PROFILE_COLORS[colorIdx % PROFILE_COLORS.length],
     uvitas:5, completed:{}, unlocked:{lujan:true},
     owned:[], equipped:{hat:null,poncho:null,pet:null},
+    visitedZones:{},
   };
 }
 
 export default function App() {
-  const [appState, setAppState] = useState({profiles:[], currentId:null});
-  const [screen, setScreen] = useState('loading');
+  // Cargar estado guardado en el mismo momento que se inicia (sincrónico)
+  const loadInitial = () => {
+    try {
+      const saved = localStorage.getItem('cuyin_state');
+      if (saved) return JSON.parse(saved);
+    } catch(e) {}
+    return {profiles:[], currentId:null};
+  };
+  const initialScreen = () => {
+    try {
+      const saved = localStorage.getItem('cuyin_state');
+      if (saved) {
+        const p = JSON.parse(saved);
+        if (p.currentId && p.profiles.some(x => x.id === p.currentId)) return 'map';
+        if (p.profiles.length) return 'picker';
+      }
+    } catch(e) {}
+    return 'setup';
+  };
+  const [appState, setAppState] = useState(loadInitial);
+  const [screen, setScreen] = useState(initialScreen);
+  const [showIntro, setShowIntro] = useState(false);
   const [currentZone, setCurrentZone] = useState(null);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [activityIdx, setActivityIdx] = useState(0);
@@ -302,20 +328,11 @@ export default function App() {
     link.rel='stylesheet';
     link.href='https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&display=swap';
     document.head.appendChild(link);
-    try {
-      const saved = localStorage.getItem('cuyin_state');
-      if (saved) {
-        const p = JSON.parse(saved);
-        setAppState(p);
-        setScreen(p.currentId ? 'map' : (p.profiles.length ? 'picker' : 'setup'));
-      } else { setScreen('setup'); }
-    } catch(e){ setScreen('setup'); }
   }, []);
 
   useEffect(() => {
-    if (screen==='loading') return;
     try { localStorage.setItem('cuyin_state', JSON.stringify(appState)); } catch(e){}
-  }, [appState, screen]);
+  }, [appState]);
 
   useEffect(() => { audio.muted = muted; }, [muted]);
   useEffect(() => {
@@ -332,8 +349,8 @@ export default function App() {
   const addProfile = (name, age) => {
     const p = newProfile(name, age, appState.profiles.length);
     setAppState(s => ({profiles: [...s.profiles, p], currentId: p.id}));
-    setScreen('map');
-    setTimeout(() => audio.speak(`¡Hola ${p.name}! Soy Cuyín. Mis amigos José y María te esperan en el camino.`), 400);
+    setShowIntro(true);
+    setScreen('intro');
   };
   const selectProfile = (id) => {
     const p = appState.profiles.find(x => x.id === id);
@@ -344,7 +361,13 @@ export default function App() {
   const deleteProfile = (id) => {
     setAppState(s => ({profiles: s.profiles.filter(p => p.id !== id), currentId: s.currentId === id ? null : s.currentId}));
   };
-  const openZone = (z) => { if (!currentProfile.unlocked[z.id]) { audio.wrong(); return; } audio.tap(); setCurrentZone(z); setScreen('zone'); };
+  const openZone = (z) => {
+    if (!currentProfile.unlocked[z.id]) { audio.wrong(); return; }
+    audio.tap(); setCurrentZone(z); setScreen('zone');
+    if (!currentProfile.visitedZones || !currentProfile.visitedZones[z.id]) {
+      updateProfile({visitedZones: {...(currentProfile.visitedZones||{}), [z.id]:true}});
+    }
+  };
   const openLesson = (l) => { audio.tap(); setCurrentLesson(l); setActivityIdx(0); setLessonUvitas(0); setScreen('lesson'); };
   const completeActivity = (e) => {
     setLessonUvitas(u => u + e);
@@ -379,7 +402,7 @@ export default function App() {
     <div style={{minHeight:'100vh',width:'100%',fontFamily:'Fredoka, system-ui, sans-serif',background:'linear-gradient(180deg,#FDE8C9 0%,#FBD9A0 50%,#E8B87C 100%)',WebkitTapHighlightColor:'transparent',touchAction:'manipulation',padding:'12px',boxSizing:'border-box'}}>
       <GlobalStyles />
       <div style={{maxWidth:448,margin:'0 auto',background:'#FFF8ED',borderRadius:24,boxShadow:'0 20px 40px rgba(0,0,0,0.15)',overflow:'hidden'}}>
-        {currentProfile && screen!=='loading' && screen!=='setup' && screen!=='picker' && screen!=='addProfile' && (
+        {currentProfile && screen!=='setup' && screen!=='picker' && screen!=='addProfile' && screen!=='intro' && (
           <HUD profile={currentProfile} muted={muted}
             onToggleMute={() => { setMuted(!muted); if (!muted) audio.tap(); }}
             onShop={() => { audio.tap(); setScreen('shop'); }}
@@ -388,12 +411,12 @@ export default function App() {
             screen={screen} />
         )}
         <div style={{padding:16,minHeight:500}}>
-          {screen==='loading' && <div style={{textAlign:'center',paddingTop:100,color:'#7B3F00'}}>Cargando...</div>}
           {screen==='setup' && <SetupScreen onCreate={addProfile} />}
+          {screen==='intro' && currentProfile && <IntroScreen profile={currentProfile} onDone={() => { setShowIntro(false); setScreen('map'); }} />}
           {screen==='picker' && <ProfilePicker profiles={appState.profiles} onSelect={selectProfile} onAddNew={() => setScreen('addProfile')} onDelete={deleteProfile} />}
           {screen==='addProfile' && <SetupScreen onCreate={addProfile} isAdditional={true} onCancel={() => setScreen('picker')} />}
           {screen==='map' && currentProfile && <MapScreen profile={currentProfile} onSelectZone={openZone} />}
-          {screen==='zone' && currentZone && currentProfile && <ZoneScreen zone={currentZone} completedLessons={currentProfile.completed} onSelectLesson={openLesson} onBack={() => { audio.tap(); setScreen('map'); }} />}
+          {screen==='zone' && currentZone && currentProfile && <ZoneScreen zone={currentZone} completedLessons={currentProfile.completed} visitedBefore={currentProfile.visitedZones && currentProfile.visitedZones[currentZone.id]} onSelectLesson={openLesson} onBack={() => { audio.tap(); setScreen('map'); }} />}
           {screen==='lesson' && currentLesson && <LessonScreen lesson={currentLesson} activityIdx={activityIdx} playerName={currentProfile.name} onComplete={completeActivity} onExit={() => { audio.tap(); setScreen('zone'); }} />}
           {screen==='victory' && currentLesson && currentProfile && <VictoryScreen lesson={currentLesson} uvitasEarned={lessonUvitas} playerName={currentProfile.name} onContinue={() => { audio.tap(); setScreen('zone'); }} equipped={currentProfile.equipped} />}
           {screen==='shop' && currentProfile && <ShopScreen uvitas={currentProfile.uvitas} equipped={currentProfile.equipped} owned={currentProfile.owned} onBuy={buyItem} onEquip={equipItem} />}
@@ -534,11 +557,15 @@ function MendozaMap() {
   );
 }
 
-function ZoneScreen({ zone, completedLessons, onSelectLesson, onBack }) {
+function ZoneScreen({ zone, completedLessons, visitedBefore, onSelectLesson, onBack }) {
   return (
     <div>
       <button onClick={onBack} className="btn-secondary" style={{marginBottom:10}}>← Volver al mapa</button>
-      <SpeechBubbleAuto delay={200}>Zona {zone.name}. {zone.subtitle}. Elegí una lección.</SpeechBubbleAuto>
+      {!visitedBefore ? (
+        <SpeechBubbleAuto delay={200}>Llegamos a {zone.name}. {zone.subtitle}. Elegí una lección.</SpeechBubbleAuto>
+      ) : (
+        <div style={{background:'#FFE4B5',border:'2px solid #FFB84D',borderRadius:16,padding:'8px 12px',fontSize:13,color:'#7B3F00',textAlign:'center'}}>Elegí una lección</div>
+      )}
       <div style={{textAlign:'center',margin:'10px 0 14px'}}>
         <div style={{fontSize:20,fontWeight:700,color:'#B84A00'}}>{zone.name}</div>
         <div style={{fontSize:13,color:'#7B3F00'}}>{zone.subtitle}</div>
@@ -589,6 +616,109 @@ function LessonScreen({ lesson, activityIdx, playerName, onComplete, onExit }) {
       {a.type==='initialSoundMatch' && <InitialSoundMatch key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
       {a.type==='diceRoll' && <DiceRoll key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
       {a.type==='sumsToTen' && <SumsToTen key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
+      {a.type==='numberDictation' && <NumberDictation key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
+      {a.type==='orderNumbers' && <OrderNumbers key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
+    </div>
+  );
+}
+
+function IntroScreen({ profile, onDone }) {
+  const [step, setStep] = useState(0);
+  const slides = [
+    { title: `¡Hola ${profile.name}!`, text: `Soy Cuyín, un guanaco de los Andes. Voy a ser tu amigo en esta aventura.`, emoji: '👋' },
+    { title: 'Vamos a viajar por Mendoza', text: 'De Luján de Cuyo hasta la cima del Aconcagua. Van a ser cinco zonas llenas de juegos.', emoji: '🗺️' },
+    { title: 'Vas a conocer a mis amigos', text: 'En el camino te esperan José y María, y muchos personajes más.', emoji: '👦👧' },
+    { title: 'Vas a aprender jugando', text: 'Letras, números, figuras. Todo lo que estás viendo en la escuela.', emoji: '📚' },
+    { title: 'Ganás uvitas', text: 'Cada vez que terminás una lección, ganás uvitas. Con las uvitas comprás sombreros, ponchos y amigos en la tienda.', emoji: '🍇' },
+    { title: '¿Estás listo?', text: '¡Vamos a jugar!', emoji: '🎉' },
+  ];
+  const s = slides[step];
+  useEffect(() => {
+    const t = setTimeout(() => audio.speak(s.title + '. ' + s.text, {rate:0.7}), 400);
+    return () => clearTimeout(t);
+  }, [step]);
+  const next = () => {
+    audio.tap();
+    if (step + 1 < slides.length) setStep(step + 1);
+    else { audio.levelUp(); onDone(); }
+  };
+  return (
+    <div style={{textAlign:'center',padding:20}}>
+      <div style={{fontSize:56,margin:'10px 0'}}>{s.emoji}</div>
+      <div style={{margin:'6px 0 12px'}}><CuyinDressed size={100} /></div>
+      <div style={{fontSize:22,fontWeight:700,color:'#B84A00',marginBottom:10}}>{s.title}</div>
+      <div style={{fontSize:15,color:'#7B3F00',marginBottom:20,lineHeight:1.4,minHeight:60,padding:'0 8px'}}>{s.text}</div>
+      <div style={{display:'flex',justifyContent:'center',gap:4,marginBottom:14}}>
+        {slides.map((_,i) => (
+          <div key={i} style={{width:8,height:8,borderRadius:'50%',background: i===step?'#B84A00':'#FFB84D',opacity: i<=step?1:0.4}} />
+        ))}
+      </div>
+      <button className="btn-primary" onClick={next}>{step+1<slides.length ? 'Seguir →' : '¡Empezar!'}</button>
+    </div>
+  );
+}
+
+function NumberDictation({ activity, onDone }) {
+  const { target } = activity;
+  const [ans, setAns] = useState(null);
+  const shuf = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
+  useEffect(() => {
+    const t = setTimeout(() => audio.speak(`Tocá el número ${target}`, {rate:0.65}), 400);
+    return () => clearTimeout(t);
+  }, []);
+  return (
+    <div style={{textAlign:'center'}}>
+      <SpeechBubbleAuto>Escuchá y tocá el número que digo</SpeechBubbleAuto>
+      <button onClick={() => audio.speak(String(target), {rate:0.55})} style={{margin:'16px 0',background:'#FFE4B5',border:'3px solid #FFB84D',borderRadius:20,padding:'12px 20px',fontSize:16,color:'#7B3F00',fontWeight:700,fontFamily:'Fredoka, sans-serif'}}>
+        🔊 Escuchar de nuevo
+      </button>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:10,margin:'20px 0'}}>
+        {shuf.map(n => {
+          const r = ans===n && n===target, w = ans===n && n!==target;
+          return (
+            <button key={n} onClick={() => {
+              setAns(n);
+              audio.speak(String(n), {rate:0.65});
+              if (n===target) { setTimeout(() => { audio.correct(); audio.speak(`¡Sí! Es el ${target}`, {rate:0.7}); }, 500); setTimeout(onDone, 1600); }
+              else { setTimeout(() => { audio.wrong(); setAns(null); }, 800); }
+            }} style={{aspectRatio:'1',borderRadius:20,fontSize:40,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#1F4E7B',border:'3px solid '+(r?'#2E7D32':'#5D9EC7'),animation: w?'shake 0.4s':'none'}}>{n}</button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function OrderNumbers({ activity, onDone }) {
+  const { numbers, direction } = activity;
+  const sorted = [...numbers].sort((a,b) => direction==='asc' ? a-b : b-a);
+  const [scrambled] = useState(() => [...numbers].sort(()=>0.5-Math.random()));
+  const [picked, setPicked] = useState([]);
+  const nextExpected = sorted[picked.length];
+  const done = picked.length === sorted.length;
+  useEffect(() => { if (done) { audio.correct(); audio.speak('¡Muy bien!', {rate:0.7}); setTimeout(onDone, 1200); } }, [done]);
+  const handleTap = (n) => {
+    if (picked.includes(n)) return;
+    if (n === nextExpected) { audio.tap(); audio.speak(String(n), {rate:0.65}); setPicked([...picked, n]); }
+    else { audio.wrong(); }
+  };
+  return (
+    <div style={{textAlign:'center'}}>
+      <SpeechBubbleAuto>Tocá los números del <b>{direction==='asc'?'más chico al más grande':'más grande al más chico'}</b></SpeechBubbleAuto>
+      <div style={{margin:'20px 0',padding:14,background:'#FFF8ED',border:'2px dashed #FFB84D',borderRadius:16,minHeight:60,display:'flex',justifyContent:'center',alignItems:'center',gap:8,flexWrap:'wrap'}}>
+        {picked.length === 0 ? <span style={{color:'#7B3F00',fontSize:14}}>Elegí uno...</span> :
+          picked.map((n,i) => <span key={i} style={{fontSize:28,fontWeight:700,color:'#4CAF50'}}>{n}{i<picked.length-1?' →':''}</span>)
+        }
+      </div>
+      <div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:8}}>
+        {scrambled.map(n => {
+          const used = picked.includes(n);
+          return (
+            <button key={n} onClick={() => handleTap(n)} disabled={used}
+              style={{aspectRatio:'1',borderRadius:16,fontSize:28,fontWeight:700,background: used?'#DDD':'#FFE4B5',color: used?'#999':'#1F4E7B',border:'3px solid '+(used?'#BBB':'#5D9EC7'),opacity: used?0.4:1}}>{n}</button>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -620,20 +750,21 @@ function LetterIntro({ activity, onDone }) {
 function InitialSoundMatch({ activity, onDone }) {
   const [sel, setSel] = useState({});
   const [wrong, setWrong] = useState(null);
-  const total = activity.options.filter(o => o.starts).length;
+  const shuffledOpts = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
+  const total = shuffledOpts.filter(o => o.starts).length;
   const foundCount = Object.values(sel).filter(Boolean).length;
   const handleTap = (idx) => {
-    const opt = activity.options[idx];
+    const opt = shuffledOpts[idx];
     if (sel[idx]) return;
     if (opt.starts) {
-      audio.tap(); audio.speak(opt.word, {rate:0.95});
+      audio.tap(); audio.speak(opt.word, {rate:0.65});
       const ns = {...sel, [idx]:true};
       setSel(ns);
       if (Object.values(ns).filter(Boolean).length === total) {
-        setTimeout(() => { audio.correct(); audio.speak('¡Excelente! Encontraste todas.'); onDone(); }, 800);
+        setTimeout(() => { audio.correct(); audio.speak('¡Excelente! Encontraste todas.', {rate:0.7}); onDone(); }, 900);
       }
     } else {
-      audio.wrong(); audio.speak(opt.word, {rate:0.95});
+      audio.wrong(); audio.speak(opt.word, {rate:0.65});
       setWrong(idx); setTimeout(() => setWrong(null), 500);
     }
   };
@@ -646,7 +777,7 @@ function InitialSoundMatch({ activity, onDone }) {
         <div style={{fontSize:13,color:'#7B3F00',marginTop:4}}>{foundCount} / {total}</div>
       </div>
       <div style={{display:'grid',gridTemplateColumns:'repeat(2, 1fr)',gap:8}}>
-        {activity.options.map((opt,i) => {
+        {shuffledOpts.map((opt,i) => {
           const s = sel[i], w = wrong===i;
           return (
             <button key={i} onClick={() => handleTap(i)}
@@ -888,20 +1019,25 @@ function SimpleSub({ activity, onDone }) {
 
 function WordMatch({ activity, onDone }) {
   const [ans, setAns] = useState(null);
+  const shuffled = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
   return (
     <div style={{textAlign:'center'}}>
-      <SpeechBubbleAuto>¿Cuál es la palabra correcta?</SpeechBubbleAuto>
-      <div style={{margin:'20px auto',width:140,height:140,background:'#FFE4B5',borderRadius:24,display:'flex',alignItems:'center',justifyContent:'center',border:'3px solid #FFB84D'}}>
-        <MatchImage type={activity.image} />
+      <SpeechBubbleAuto>Mirá el dibujo y buscá la palabra <b>{activity.word}</b></SpeechBubbleAuto>
+      <div style={{margin:'20px auto',display:'flex',flexDirection:'column',alignItems:'center'}}>
+        <button onClick={() => audio.speak(activity.word, {rate:0.6})} style={{background:'#FFE4B5',border:'3px solid #FFB84D',borderRadius:24,padding:14,cursor:'pointer'}}>
+          <MatchImage type={activity.image} />
+        </button>
+        <div style={{marginTop:8,fontSize:22,fontWeight:700,color:'#B84A00',letterSpacing:3}}>{activity.word}</div>
+        <div style={{fontSize:11,color:'#7B3F00',marginTop:2}}>🔊 tocá el dibujo para escuchar</div>
       </div>
       <div style={{display:'flex',flexDirection:'column',gap:8}}>
-        {activity.options.map(opt => {
+        {shuffled.map(opt => {
           const r = ans===opt && opt===activity.word, w = ans===opt && opt!==activity.word;
           return (
             <button key={opt} onClick={() => {
-              setAns(opt); audio.speak(opt, {rate:0.9});
-              if (opt===activity.word) { setTimeout(() => { audio.correct(); audio.speak(`¡Muy bien! Es ${activity.word}`); }, 400); setTimeout(onDone, 1600); }
-              else { setTimeout(() => { audio.wrong(); setAns(null); }, 600); }
+              setAns(opt); audio.speak(opt, {rate:0.65});
+              if (opt===activity.word) { setTimeout(() => { audio.correct(); audio.speak(`¡Muy bien! Es ${activity.word}`, {rate:0.7}); }, 600); setTimeout(onDone, 1900); }
+              else { setTimeout(() => { audio.wrong(); setAns(null); }, 700); }
             }} style={{padding:'16px',borderRadius:14,fontSize:22,fontWeight:700,letterSpacing:2,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{opt}</button>
           );
         })}
