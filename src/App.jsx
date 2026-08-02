@@ -429,6 +429,19 @@ export default function App() {
     }
   };
   const openLesson = (l) => { audio.tap(); setCurrentLesson(l); setActivityIdx(0); setLessonUvitas(0); setScreen('lesson'); };
+  const resetLesson = (lessonId) => {
+    const nc = {...currentProfile.completed};
+    delete nc[lessonId];
+    updateProfile({completed:nc});
+  };
+  const resetZone = (zone) => {
+    const nc = {...currentProfile.completed};
+    zone.lessons.forEach(l => delete nc[l.id]);
+    updateProfile({completed:nc});
+  };
+  const resetAll = () => {
+    updateProfile({completed:{}, unlocked:{lujan:true}, uvitas:5, owned:[], equipped:{hat:null,poncho:null,pet:null}, visitedZones:{}});
+  };
   const completeActivity = (e) => {
     setLessonUvitas(u => u + e);
     if (activityIdx + 1 < currentLesson.activities.length) setActivityIdx(activityIdx + 1);
@@ -468,6 +481,7 @@ export default function App() {
             onShop={() => { audio.tap(); setScreen('shop'); }}
             onHome={() => { audio.tap(); setScreen('map'); }}
             onSwitchProfile={() => { audio.tap(); setScreen('picker'); }}
+            onIndex={() => { audio.tap(); setScreen('index'); }}
             screen={screen} />
         )}
         <div style={{padding:16,minHeight:500}}>
@@ -475,8 +489,9 @@ export default function App() {
           {screen==='intro' && currentProfile && <IntroScreen profile={currentProfile} onDone={() => { setShowIntro(false); setScreen('map'); }} />}
           {screen==='picker' && <ProfilePicker profiles={appState.profiles} onSelect={selectProfile} onAddNew={() => setScreen('addProfile')} onDelete={deleteProfile} />}
           {screen==='addProfile' && <SetupScreen onCreate={addProfile} isAdditional={true} onCancel={() => setScreen('picker')} />}
-          {screen==='map' && currentProfile && <MapScreen profile={currentProfile} onSelectZone={openZone} />}
-          {screen==='zone' && currentZone && currentProfile && <ZoneScreen zone={currentZone} completedLessons={currentProfile.completed} visitedBefore={currentProfile.visitedZones && currentProfile.visitedZones[currentZone.id]} onSelectLesson={openLesson} onBack={() => { audio.tap(); setScreen('map'); }} />}
+          {screen==='map' && currentProfile && <MapScreen profile={currentProfile} onSelectZone={openZone} onIndex={() => { audio.tap(); setScreen('index'); }} onResetAll={resetAll} />}
+          {screen==='index' && currentProfile && <IndexScreen profile={currentProfile} onSelectLesson={(z,l) => { setCurrentZone(z); openLesson(l); }} onBack={() => { audio.tap(); setScreen('map'); }} />}
+          {screen==='zone' && currentZone && currentProfile && <ZoneScreen zone={currentZone} completedLessons={currentProfile.completed} visitedBefore={currentProfile.visitedZones && currentProfile.visitedZones[currentZone.id]} onSelectLesson={openLesson} onResetLesson={resetLesson} onResetZone={() => resetZone(currentZone)} onBack={() => { audio.tap(); setScreen('map'); }} />}
           {screen==='lesson' && currentLesson && <LessonScreen lesson={currentLesson} activityIdx={activityIdx} playerName={currentProfile.name} onComplete={completeActivity} onExit={() => { audio.tap(); setScreen('zone'); }} />}
           {screen==='victory' && currentLesson && currentProfile && <VictoryScreen lesson={currentLesson} uvitasEarned={lessonUvitas} playerName={currentProfile.name} onContinue={() => { audio.tap(); setScreen('zone'); }} equipped={currentProfile.equipped} />}
           {screen==='shop' && currentProfile && <ShopScreen uvitas={currentProfile.uvitas} equipped={currentProfile.equipped} owned={currentProfile.owned} onBuy={buyItem} onEquip={equipItem} />}
@@ -554,27 +569,29 @@ function GlobalStyles() {
   );
 }
 
-function HUD({ profile, muted, onToggleMute, onShop, onHome, onSwitchProfile, screen }) {
+function HUD({ profile, muted, onToggleMute, onShop, onHome, onSwitchProfile, onIndex, screen }) {
   return (
-    <div style={{display:'flex',alignItems:'center',padding:'10px 12px',background:'#FFF8ED',borderBottom:'2px solid #FFE4B5',gap:5}}>
-      <button onClick={onHome} style={{background: screen==='map'?'#FF9147':'#FFE4B5',color: screen==='map'?'white':'#7B3F00',border:'none',padding:'7px 9px',borderRadius:10,fontSize:14}}>🗺️</button>
-      <button onClick={onSwitchProfile} style={{flex:1,background:profile.color,color:'white',border:'none',padding:'6px 8px',borderRadius:10,fontWeight:700,fontSize:13,display:'flex',alignItems:'center',justifyContent:'center',gap:4,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>👤 {profile.name}</button>
-      <div style={{background:'#FFE4B5',borderRadius:999,padding:'5px 8px',display:'flex',alignItems:'center',gap:3}}><Grape small /><span style={{fontWeight:700,color:'#7B3F00',fontSize:14}}>{profile.uvitas}</span></div>
-      <button onClick={onToggleMute} style={{background:'#FFE4B5',color:'#7B3F00',border:'none',padding:'7px 8px',borderRadius:10,fontSize:14}}>{muted?'🔇':'🔊'}</button>
-      <button onClick={onShop} style={{background: screen==='shop'?'#FF9147':'#FFE4B5',color: screen==='shop'?'white':'#7B3F00',border:'none',padding:'7px 9px',borderRadius:10,fontSize:14}}>🛍️</button>
+    <div style={{display:'flex',alignItems:'center',padding:'10px 12px',background:'#FFF8ED',borderBottom:'2px solid #FFE4B5',gap:4}}>
+      <button onClick={onHome} style={{background: screen==='map'?'#FF9147':'#FFE4B5',color: screen==='map'?'white':'#7B3F00',border:'none',padding:'7px 8px',borderRadius:10,fontSize:13}}>🗺️</button>
+      <button onClick={onIndex} style={{background: screen==='index'?'#FF9147':'#FFE4B5',color: screen==='index'?'white':'#7B3F00',border:'none',padding:'7px 8px',borderRadius:10,fontSize:13}}>📋</button>
+      <button onClick={onSwitchProfile} style={{flex:1,background:profile.color,color:'white',border:'none',padding:'6px 6px',borderRadius:10,fontWeight:700,fontSize:12,display:'flex',alignItems:'center',justifyContent:'center',gap:3,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>👤 {profile.name}</button>
+      <div style={{background:'#FFE4B5',borderRadius:999,padding:'4px 7px',display:'flex',alignItems:'center',gap:3}}><Grape small /><span style={{fontWeight:700,color:'#7B3F00',fontSize:13}}>{profile.uvitas}</span></div>
+      <button onClick={onToggleMute} style={{background:'#FFE4B5',color:'#7B3F00',border:'none',padding:'7px 7px',borderRadius:10,fontSize:13}}>{muted?'🔇':'🔊'}</button>
+      <button onClick={onShop} style={{background: screen==='shop'?'#FF9147':'#FFE4B5',color: screen==='shop'?'white':'#7B3F00',border:'none',padding:'7px 8px',borderRadius:10,fontSize:13}}>🛍️</button>
     </div>
   );
 }
 
-function MapScreen({ profile, onSelectZone }) {
+function MapScreen({ profile, onSelectZone, onIndex, onResetAll }) {
   const tc = Object.keys(profile.completed).length;
   const tl = GAME.zones.reduce((s,z)=>s+z.lessons.length,0);
+  const [confirmReset, setConfirmReset] = useState(false);
   return (
     <div>
       <SpeechBubbleAuto delay={300}>¡Hola {profile.name}! Elegí una zona para jugar.</SpeechBubbleAuto>
       <div style={{textAlign:'center',margin:'12px 0'}}>
         <div style={{fontSize:20,fontWeight:700,color:'#B84A00'}}>Aventura por Mendoza</div>
-        <div style={{fontSize:12,color:'#7B3F00'}}>{tc} de {tl} lecciones · 1er cuatri</div>
+        <div style={{fontSize:12,color:'#7B3F00'}}>{tc} de {tl} lecciones</div>
       </div>
       <div style={{position:'relative',height:360,borderRadius:24,overflow:'hidden',background:'linear-gradient(180deg,#B8D4E8 0%,#E8DAB8 60%,#C89568 100%)'}}>
         <MendozaMap />
@@ -593,6 +610,19 @@ function MapScreen({ profile, onSelectZone }) {
       <div style={{marginTop:12,padding:10,background:'#FFE4B5',borderRadius:16,border:'2px solid #FFB84D',display:'flex',alignItems:'center',gap:10,fontSize:12,color:'#7B3F00',lineHeight:1.3}}>
         <span style={{fontSize:20}}>💡</span>Zonas <b>naranjas</b>: para jugar. <b>Verdes</b>: ya hechas. <b>Grises</b>: se abren completando la anterior.
       </div>
+      <div style={{display:'flex',gap:6,marginTop:10}}>
+        <button onClick={onIndex} className="btn-secondary" style={{flex:1,fontSize:13}}>📋 Índice</button>
+        <button onClick={() => setConfirmReset(true)} style={{padding:'8px 12px',borderRadius:12,background:'#FFF0F0',border:'2px solid #FFAAAA',color:'#CC0000',fontSize:12,fontWeight:600}}>🔄 Reset todo</button>
+      </div>
+      {confirmReset && (
+        <div style={{marginTop:8,padding:10,background:'#FFCCCC',borderRadius:12,border:'2px solid #CC0000',textAlign:'center'}}>
+          <div style={{fontSize:13,color:'#CC0000',fontWeight:700,marginBottom:8}}>¿Seguro? Se borra todo el progreso de {profile.name}</div>
+          <div style={{display:'flex',gap:8}}>
+            <button onClick={() => { onResetAll(); setConfirmReset(false); }} style={{flex:1,padding:10,borderRadius:10,background:'#CC0000',color:'white',border:'none',fontWeight:700,fontSize:13}}>Sí, borrar</button>
+            <button onClick={() => setConfirmReset(false)} style={{flex:1,padding:10,borderRadius:10,background:'#FFE4B5',color:'#7B3F00',border:'2px solid #FFB84D',fontWeight:700,fontSize:13}}>Cancelar</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -617,33 +647,40 @@ function MendozaMap() {
   );
 }
 
-function ZoneScreen({ zone, completedLessons, visitedBefore, onSelectLesson, onBack }) {
+function ZoneScreen({ zone, completedLessons, visitedBefore, onSelectLesson, onResetLesson, onResetZone, onBack }) {
+  const [showReset, setShowReset] = useState(false);
   return (
     <div>
-      <button onClick={onBack} className="btn-secondary" style={{marginBottom:10}}>← Volver al mapa</button>
-      {!visitedBefore ? (
-        <SpeechBubbleAuto delay={200}>Llegamos a {zone.name}. {zone.subtitle}. Elegí una lección.</SpeechBubbleAuto>
-      ) : (
-        <div style={{background:'#FFE4B5',border:'2px solid #FFB84D',borderRadius:16,padding:'8px 12px',fontSize:13,color:'#7B3F00',textAlign:'center'}}>Elegí una lección</div>
-      )}
-      <div style={{textAlign:'center',margin:'10px 0 14px'}}>
+      <div style={{display:'flex',gap:6,marginBottom:10}}>
+        <button onClick={onBack} className="btn-secondary" style={{flex:1}}>← Mapa</button>
+        <button onClick={() => setShowReset(!showReset)} style={{background:'#FFF8ED',border:'2px solid #CCC',borderRadius:12,padding:'8px 12px',fontSize:12,color:'#7B3F00',fontWeight:600}}>{showReset?'✓ Listo':'🔄 Reset'}</button>
+      </div>
+      {!visitedBefore && <SpeechBubbleAuto delay={200}>Llegamos a {zone.name}. {zone.subtitle}. Elegí una lección.</SpeechBubbleAuto>}
+      <div style={{textAlign:'center',margin:'8px 0 12px'}}>
         <div style={{fontSize:20,fontWeight:700,color:'#B84A00'}}>{zone.name}</div>
         <div style={{fontSize:13,color:'#7B3F00'}}>{zone.subtitle}</div>
       </div>
-      <div style={{display:'flex',flexDirection:'column',gap:10}}>
+      {showReset && <button onClick={() => { onResetZone(); setShowReset(false); audio.speak('Zona reseteada',{rate:0.7}); }} style={{width:'100%',padding:10,borderRadius:12,background:'#FFCCCC',border:'2px solid #CC0000',color:'#CC0000',fontWeight:700,fontSize:13,marginBottom:10}}>🗑️ Borrar progreso de {zone.name}</button>}
+      <div style={{display:'flex',flexDirection:'column',gap:8}}>
         {zone.lessons.map((l,i) => {
-          const done = completedLessons[l.id];
-          const av = i===0 || completedLessons[zone.lessons[i-1].id];
+          const done = !!completedLessons[l.id];
+          const prevDone = i===0 || !!completedLessons[zone.lessons[i-1].id];
+          const canPlay = prevDone;
           return (
-            <button key={l.id} onClick={() => av && onSelectLesson(l)} disabled={!av}
-              style={{background: done?'#4CAF50':av?'#FFE4B5':'#F0F0F0',border: av?'3px solid #FFB84D':'2px solid #CCC',borderRadius:16,padding:14,display:'flex',alignItems:'center',gap:12,color:done?'white':'#7B3F00',textAlign:'left',opacity:av?1:0.6}}>
-              <div style={{fontSize:24}}>{done?'⭐':av?'▶️':'🔒'}</div>
-              <div style={{flex:1}}>
-                <div style={{fontWeight:700,fontSize:15}}>Lección {i+1}</div>
-                <div style={{fontSize:13,opacity:0.9}}>{l.name}</div>
-              </div>
-              <div style={{fontSize:12,opacity:0.8}}>{l.activities.length} 🎯</div>
-            </button>
+            <div key={l.id} style={{display:'flex',gap:6,alignItems:'stretch'}}>
+              <button onClick={() => canPlay && onSelectLesson(l)} disabled={!canPlay}
+                style={{flex:1,borderRadius:16,padding:'12px 14px',display:'flex',alignItems:'center',gap:10,textAlign:'left',
+                  background: done?'#E8F5E9':canPlay?'#FFF8ED':'#F5F5F5',
+                  border: done?'3px solid #4CAF50':canPlay?'3px solid #FF9147':'2px solid #CCC',
+                  color:'#7B3F00',opacity: !canPlay?0.5:1}}>
+                <div style={{fontSize:22,width:28,textAlign:'center'}}>{done?'✅':canPlay?'▶️':'🔒'}</div>
+                <div style={{flex:1}}>
+                  <div style={{fontWeight:700,fontSize:14}}>{l.name}</div>
+                  <div style={{fontSize:11,color: done?'#2E7D32':'#999',marginTop:2}}>{done?'Completada ✓':canPlay?`${l.activities.length} actividades`:'Bloqueada'}</div>
+                </div>
+              </button>
+              {done && showReset && <button onClick={() => onResetLesson(l.id)} style={{width:42,borderRadius:12,background:'#FFF0F0',border:'2px solid #FFAAAA',color:'#CC0000',fontSize:15,flexShrink:0}}>↺</button>}
+            </div>
           );
         })}
       </div>
@@ -651,9 +688,85 @@ function ZoneScreen({ zone, completedLessons, visitedBefore, onSelectLesson, onB
   );
 }
 
+function IndexScreen({ profile, onSelectLesson, onBack }) {
+  return (
+    <div>
+      <button onClick={onBack} className="btn-secondary" style={{marginBottom:10}}>← Volver al mapa</button>
+      <div style={{textAlign:'center',margin:'0 0 14px'}}>
+        <div style={{fontSize:20,fontWeight:700,color:'#B84A00'}}>📋 Índice de lecciones</div>
+        <div style={{fontSize:12,color:'#7B3F00'}}>Tocá cualquiera para ir directamente</div>
+      </div>
+      {GAME.zones.filter(z => !z.goal).map(z => {
+        const unlocked = profile.unlocked[z.id];
+        return (
+          <div key={z.id} style={{marginBottom:12}}>
+            <div style={{padding:'8px 12px',background: unlocked?'#FFE4B5':'#F0F0F0',borderRadius:'12px 12px 0 0',border:'2px solid '+(unlocked?'#FFB84D':'#CCC'),borderBottom:'none',display:'flex',alignItems:'center',gap:6}}>
+              <span style={{fontSize:16}}>{unlocked?'📍':'🔒'}</span>
+              <div>
+                <div style={{fontWeight:700,fontSize:14,color:'#7B3F00'}}>{z.name}</div>
+                <div style={{fontSize:11,color:'#999'}}>{z.subtitle}</div>
+              </div>
+            </div>
+            <div style={{border:'2px solid '+(unlocked?'#FFB84D':'#CCC'),borderTop:'none',borderRadius:'0 0 12px 12px',overflow:'hidden'}}>
+              {z.lessons.map((l,i) => {
+                const done = !!profile.completed[l.id];
+                const canPlay = unlocked && (i===0 || !!profile.completed[z.lessons[i-1].id]);
+                return (
+                  <button key={l.id} onClick={() => canPlay && onSelectLesson(z,l)} disabled={!canPlay}
+                    style={{width:'100%',padding:'10px 12px',display:'flex',alignItems:'center',gap:8,
+                      background: done?'#E8F5E9':canPlay?'#FFF8ED':'#FAFAFA',
+                      borderBottom:'1px solid #EEE',border:'none',textAlign:'left',
+                      opacity: canPlay?1:0.4,color:'#7B3F00'}}>
+                    <span style={{fontSize:14,width:22,textAlign:'center'}}>{done?'✅':canPlay?'▶️':'🔒'}</span>
+                    <span style={{fontSize:13,flex:1}}>{l.name}</span>
+                    <span style={{fontSize:11,color:'#999'}}>{l.activities.length}🎯</span>
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
 function LessonScreen({ lesson, activityIdx, playerName, onComplete, onExit }) {
   const a = lesson.activities[activityIdx];
   const prog = (activityIdx/lesson.activities.length)*100;
+  const [errors, setErrors] = useState(0);
+  const [showHelp, setShowHelp] = useState(false);
+
+  useEffect(() => { setErrors(0); setShowHelp(false); }, [activityIdx]);
+
+  const onWrong = () => {
+    const e = errors + 1;
+    setErrors(e);
+    if (e >= 3 && !showHelp) {
+      setShowHelp(true);
+      const hints = {
+        letterIntro: 'Tocá la letra grande para escucharla.',
+        findLetter: 'Buscá y tocá solo las letras que dice arriba.',
+        countObjects: 'Primero tocá cada uno para contar, después elegí el número.',
+        simpleAdd: 'Contá los dos grupos juntos y elegí cuántos son en total.',
+        simpleSub: 'Mirá cuántos quedan y elegí ese número.',
+        wordMatch: 'Mirá la palabra de arriba y buscá la que es igual.',
+        numberIntro: 'Tocá el número grande para escucharlo.',
+        compareNumbers: 'Tocá el número que sea más grande.',
+        shapeIntro: 'Tocá la figura para escuchar su nombre.',
+        shapeSelect: 'Mirá bien las figuras y elegí la que dice arriba.',
+        initialSoundMatch: 'Buscá las palabras que empiezan con el mismo sonido.',
+        diceRoll: 'Contá los puntos del dado y elegí ese número.',
+        sumsToTen: 'Pensá qué número le falta para llegar a diez.',
+        syllableTable: 'Escuchá bien la sílaba y tocá la que suena igual.',
+        numberDictation: 'Escuchá el número y tocá el que es.',
+        orderNumbers: 'Tocá los números en orden, empezando por el más chiquito.',
+      };
+      const hint = hints[a.type] || 'Escuchá bien y elegí la opción correcta.';
+      audio.speak(`No te preocupes. Te ayudo. ${hint}`, {rate:0.6});
+    }
+  };
+
   return (
     <div>
       <div style={{display:'flex',alignItems:'center',gap:8,marginBottom:10}}>
@@ -663,21 +776,30 @@ function LessonScreen({ lesson, activityIdx, playerName, onComplete, onExit }) {
         </div>
         <div style={{fontSize:13,fontWeight:700,color:'#7B3F00'}}>{activityIdx+1}/{lesson.activities.length}</div>
       </div>
+      {showHelp && (
+        <div style={{background:'#FFF3CD',border:'2px solid #FFB84D',borderRadius:14,padding:'10px 14px',marginBottom:10,display:'flex',alignItems:'center',gap:8}}>
+          <span style={{fontSize:20}}>💡</span>
+          <div style={{fontSize:13,color:'#7B3F00',lineHeight:1.3}}>
+            No te preocupes, ¡así se aprende! Escuchá la ayuda.
+            <button onClick={() => { const hints = {letterIntro:'Tocá la letra grande para escucharla.',findLetter:'Buscá las letras que dice arriba.',simpleAdd:'Contá los dos grupos juntos.',simpleSub:'Mirá cuántos quedan.',wordMatch:'Buscá la palabra igual a la de arriba.',compareNumbers:'Tocá el más grande.',sumsToTen:'¿Qué le falta para llegar a diez?',syllableTable:'Tocá la sílaba que suena igual.'}; audio.speak(hints[a.type]||'Escuchá bien y elegí.',{rate:0.55}); }} style={{marginLeft:6,background:'#FFE4B5',border:'2px solid #FFB84D',borderRadius:8,padding:'4px 8px',fontSize:11,color:'#7B3F00',fontWeight:700}}>🔊 Repetir ayuda</button>
+          </div>
+        </div>
+      )}
       {a.type==='letterIntro' && <LetterIntro key={activityIdx} activity={a} onDone={()=>onComplete(2)} />}
-      {a.type==='findLetter' && <FindLetter key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
+      {a.type==='findLetter' && <FindLetter key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
       {a.type==='countObjects' && <CountObjects key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
-      {a.type==='simpleAdd' && <SimpleAdd key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
-      {a.type==='simpleSub' && <SimpleSub key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
-      {a.type==='wordMatch' && <WordMatch key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
+      {a.type==='simpleAdd' && <SimpleAdd key={activityIdx} activity={a} onDone={()=>onComplete(4)} onWrong={onWrong} />}
+      {a.type==='simpleSub' && <SimpleSub key={activityIdx} activity={a} onDone={()=>onComplete(4)} onWrong={onWrong} />}
+      {a.type==='wordMatch' && <WordMatch key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
       {a.type==='numberIntro' && <NumberIntro key={activityIdx} activity={a} onDone={()=>onComplete(2)} />}
-      {a.type==='compareNumbers' && <CompareNumbers key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
+      {a.type==='compareNumbers' && <CompareNumbers key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
       {a.type==='shapeIntro' && <ShapeIntro key={activityIdx} activity={a} onDone={()=>onComplete(2)} />}
-      {a.type==='shapeSelect' && <ShapeSelect key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
-      {a.type==='initialSoundMatch' && <InitialSoundMatch key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
-      {a.type==='diceRoll' && <DiceRoll key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
-      {a.type==='sumsToTen' && <SumsToTen key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
+      {a.type==='shapeSelect' && <ShapeSelect key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
+      {a.type==='initialSoundMatch' && <InitialSoundMatch key={activityIdx} activity={a} onDone={()=>onComplete(4)} onWrong={onWrong} />}
+      {a.type==='diceRoll' && <DiceRoll key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
+      {a.type==='sumsToTen' && <SumsToTen key={activityIdx} activity={a} onDone={()=>onComplete(4)} onWrong={onWrong} />}
       {a.type==='syllableTable' && <SyllableTable key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
-      {a.type==='numberDictation' && <NumberDictation key={activityIdx} activity={a} onDone={()=>onComplete(3)} />}
+      {a.type==='numberDictation' && <NumberDictation key={activityIdx} activity={a} onDone={()=>onComplete(3)} onWrong={onWrong} />}
       {a.type==='orderNumbers' && <OrderNumbers key={activityIdx} activity={a} onDone={()=>onComplete(4)} />}
     </div>
   );
@@ -719,7 +841,7 @@ function IntroScreen({ profile, onDone }) {
   );
 }
 
-function NumberDictation({ activity, onDone }) {
+function NumberDictation({ activity, onDone, onWrong }) {
   const { target } = activity;
   const [ans, setAns] = useState(null);
   const shuf = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
@@ -918,7 +1040,7 @@ function LetterIntro({ activity, onDone }) {
   );
 }
 
-function InitialSoundMatch({ activity, onDone }) {
+function InitialSoundMatch({ activity, onDone, onWrong }) {
   const [sel, setSel] = useState({});
   const [wrong, setWrong] = useState(null);
   const shuffledOpts = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
@@ -935,7 +1057,7 @@ function InitialSoundMatch({ activity, onDone }) {
         setTimeout(() => { audio.correct(); audio.speak('¡Excelente! Encontraste todas.', {rate:0.7}); onDone(); }, 900);
       }
     } else {
-      audio.wrong(); audio.speak(opt.word, {rate:0.65});
+      audio.wrong(); if(onWrong) onWrong(); audio.speak(opt.word, {rate:0.65});
       setWrong(idx); setTimeout(() => setWrong(null), 500);
     }
   };
@@ -978,7 +1100,7 @@ function NumberIntro({ activity, onDone }) {
   );
 }
 
-function CompareNumbers({ activity, onDone }) {
+function CompareNumbers({ activity, onDone, onWrong }) {
   const { a, b } = activity;
   const big = a > b ? 'a' : 'b';
   const [ans, setAns] = useState(null);
@@ -992,7 +1114,7 @@ function CompareNumbers({ activity, onDone }) {
             <button key={k} onClick={() => {
               setAns(k);
               if (k===big) { audio.correct(); audio.speak(`${v} es más grande`); setTimeout(onDone, 1200); }
-              else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+              else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
             }} style={{width:100,height:130,borderRadius:20,fontSize:56,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'3px solid '+(r?'#2E7D32':'#FFB84D'),animation: w?'shake 0.4s':'none'}}>{v}</button>
           );
         })}
@@ -1018,7 +1140,7 @@ function ShapeIntro({ activity, onDone }) {
   );
 }
 
-function ShapeSelect({ activity, onDone }) {
+function ShapeSelect({ activity, onDone, onWrong }) {
   const all = ['square','triangle','circle','rectangle'];
   const opts = useRef([...all].sort(()=>0.5-Math.random())).current;
   const [ans, setAns] = useState(null);
@@ -1032,7 +1154,7 @@ function ShapeSelect({ activity, onDone }) {
             <button key={s} onClick={() => {
               setAns(s);
               if (s===activity.target) { audio.correct(); audio.speak(`¡Muy bien! Es el ${activity.name}`); setTimeout(onDone, 1300); }
-              else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+              else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
             }} style={{aspectRatio:'1',borderRadius:20,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',border: r?'3px solid #2E7D32':'2px solid #FFB84D',display:'flex',alignItems:'center',justifyContent:'center',animation: w?'shake 0.4s':'none'}}>
               <Shape type={s} size={80} color={r?'white':'#7B3F00'} />
             </button>
@@ -1052,7 +1174,7 @@ function Shape({ type, size=80, color='#B84A00' }) {
   return null;
 }
 
-function FindLetter({ activity, onDone }) {
+function FindLetter({ activity, onDone, onWrong }) {
   const { target, grid } = activity;
   const tc = grid.filter(l => l===target).length;
   const [found, setFound] = useState([]);
@@ -1065,7 +1187,7 @@ function FindLetter({ activity, onDone }) {
       setFound(nf);
       if (nf.length===tc) setTimeout(() => { audio.correct(); audio.speak('¡Muy bien!'); onDone(); }, 500);
     } else {
-      audio.wrong(); setWrong(idx); setTimeout(() => setWrong(null), 400);
+      audio.wrong(); if(onWrong) onWrong(); setWrong(idx); setTimeout(() => setWrong(null), 400);
     }
   };
   return (
@@ -1123,7 +1245,7 @@ function CountObjects({ activity, onDone }) {
   );
 }
 
-function SimpleAdd({ activity, onDone }) {
+function SimpleAdd({ activity, onDone, onWrong }) {
   const { a, b, object, who } = activity;
   const tot = a + b;
   const [ans, setAns] = useState(null);
@@ -1145,7 +1267,7 @@ function SimpleAdd({ activity, onDone }) {
             <button key={n} onClick={() => {
               setAns(n);
               if (n===tot) { audio.correct(); audio.speak(`¡Correcto! ${a} más ${b} son ${tot}`); setTimeout(onDone, 1500); }
-              else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+              else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
             }} style={{padding:'14px 0',borderRadius:14,fontSize:22,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{n}</button>
           );
         })}
@@ -1154,7 +1276,7 @@ function SimpleAdd({ activity, onDone }) {
   );
 }
 
-function SimpleSub({ activity, onDone }) {
+function SimpleSub({ activity, onDone, onWrong }) {
   const { a, b, object, who } = activity;
   const tot = a - b;
   const [ans, setAns] = useState(null);
@@ -1179,7 +1301,7 @@ function SimpleSub({ activity, onDone }) {
             <button key={n} onClick={() => {
               setAns(n);
               if (n===tot) { audio.correct(); audio.speak(`¡Bien! Quedan ${tot}`); setTimeout(onDone, 1300); }
-              else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+              else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
             }} style={{padding:'14px 0',borderRadius:14,fontSize:22,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{n}</button>
           );
         })}
@@ -1188,7 +1310,7 @@ function SimpleSub({ activity, onDone }) {
   );
 }
 
-function WordMatch({ activity, onDone }) {
+function WordMatch({ activity, onDone, onWrong }) {
   const [ans, setAns] = useState(null);
   const shuffled = useRef([...activity.options].sort(()=>0.5-Math.random())).current;
   return (
@@ -1208,7 +1330,7 @@ function WordMatch({ activity, onDone }) {
             <button key={opt} onClick={() => {
               setAns(opt); audio.speak(opt, {rate:0.65});
               if (opt===activity.word) { setTimeout(() => { audio.correct(); audio.speak(`¡Muy bien! Es ${activity.word}`, {rate:0.7}); }, 600); setTimeout(onDone, 1900); }
-              else { setTimeout(() => { audio.wrong(); setAns(null); }, 700); }
+              else { setTimeout(() => { audio.wrong(); if(onWrong) onWrong(); setAns(null); }, 700); }
             }} style={{padding:'16px',borderRadius:14,fontSize:22,fontWeight:700,letterSpacing:2,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{opt}</button>
           );
         })}
@@ -1352,7 +1474,7 @@ function Die({ number, size=100 }) {
   );
 }
 
-function DiceRoll({ activity, onDone }) {
+function DiceRoll({ activity, onDone, onWrong }) {
   const { target } = activity;
   const [rolling, setRolling] = useState(false);
   const [shown, setShown] = useState(null);
@@ -1394,7 +1516,7 @@ function DiceRoll({ activity, onDone }) {
                 <button key={n} onClick={() => {
                   setAns(n);
                   if (n===target) { audio.correct(); audio.speak('¡Muy bien!'); setTimeout(onDone, 1000); }
-                  else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+                  else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
                 }} style={{padding:'16px 0',borderRadius:14,fontSize:26,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{n}</button>
               );
             })}
@@ -1405,7 +1527,7 @@ function DiceRoll({ activity, onDone }) {
   );
 }
 
-function SumsToTen({ activity, onDone }) {
+function SumsToTen({ activity, onDone, onWrong }) {
   const { a } = activity;
   const missing = 10 - a;
   const [ans, setAns] = useState(null);
@@ -1426,7 +1548,7 @@ function SumsToTen({ activity, onDone }) {
             <button key={n} onClick={() => {
               setAns(n);
               if (n===missing) { audio.correct(); audio.speak(`¡Muy bien! ${a} más ${missing} son 10`); setTimeout(onDone, 1500); }
-              else { audio.wrong(); setTimeout(() => setAns(null), 700); }
+              else { audio.wrong(); if(onWrong) onWrong(); setTimeout(() => setAns(null), 700); }
             }} style={{padding:'14px 0',borderRadius:14,fontSize:22,fontWeight:700,background: r?'linear-gradient(135deg,#7FD858,#4CAF50)':w?'#FFCCCC':'#FFE4B5',color: r?'white':'#7B3F00',border:'none',animation: w?'shake 0.4s':'none'}}>{n}</button>
           );
         })}
