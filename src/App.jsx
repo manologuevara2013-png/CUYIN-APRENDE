@@ -328,16 +328,29 @@ const GAME = {
 const SHOP_ITEMS = {
   hat: [
     { id:'gauchoHat', name:'Sombrero gaucho', price:15, slot:'hat' },
-    { id:'andeanCap', name:'Gorro andino', price:25, slot:'hat' },
     { id:'redBeret', name:'Boina roja', price:20, slot:'hat' },
+    { id:'andeanCap', name:'Gorro andino', price:25, slot:'hat' },
+    { id:'crown', name:'Corona dorada', price:50, slot:'hat' },
+    { id:'wizardHat', name:'Gorro de mago', price:45, slot:'hat' },
+    { id:'explorerHelmet', name:'Casco explorador', price:35, slot:'hat' },
   ],
   poncho: [
     { id:'redPoncho', name:'Poncho rojo', price:20, slot:'poncho' },
     { id:'pampaPoncho', name:'Poncho pampa', price:35, slot:'poncho' },
+    { id:'blueVest', name:'Chaleco celeste', price:30, slot:'poncho' },
+    { id:'heroCape', name:'Capa de superhéroe', price:60, slot:'poncho' },
   ],
   pet: [
     { id:'condor', name:'Cóndor', price:40, slot:'pet' },
     { id:'fox', name:'Zorro colorado', price:35, slot:'pet' },
+    { id:'frog', name:'Ranita mendocina', price:30, slot:'pet' },
+    { id:'owl', name:'Lechuza amiga', price:45, slot:'pet' },
+    { id:'vizcacha', name:'Vizcacha dormilona', price:50, slot:'pet' },
+  ],
+  toy: [
+    { id:'balloons', name:'Globos de fiesta', price:15, slot:'toy' },
+    { id:'star', name:'Estrella brillante', price:20, slot:'toy' },
+    { id:'chest', name:'Cofre del tesoro', price:70, slot:'toy' },
   ],
 };
 
@@ -349,7 +362,7 @@ function newProfile(name, age, colorIdx) {
     name: name.trim(), age: age || null,
     color: PROFILE_COLORS[colorIdx % PROFILE_COLORS.length],
     uvitas:5, completed:{}, unlocked:{lujan:true},
-    owned:[], equipped:{hat:null,poncho:null,pet:null},
+    owned:[], equipped:{hat:null,poncho:null,pet:null,toy:null},
     visitedZones:{},
   };
 }
@@ -440,7 +453,7 @@ export default function App() {
     updateProfile({completed:nc});
   };
   const resetAll = () => {
-    updateProfile({completed:{}, unlocked:{lujan:true}, uvitas:5, owned:[], equipped:{hat:null,poncho:null,pet:null}, visitedZones:{}});
+    updateProfile({completed:{}, unlocked:{lujan:true}, uvitas:5, owned:[], equipped:{hat:null,poncho:null,pet:null,toy:null}, visitedZones:{}});
   };
   const completeActivity = (e) => {
     setLessonUvitas(u => u + e);
@@ -1378,9 +1391,9 @@ function ShopScreen({ uvitas, equipped, owned, onBuy, onEquip }) {
         <div style={{position:'absolute',bottom:0,left:0,right:0,height:25,background:'#C89568'}} />
         <CuyinDressed equipped={equipped} size={160} />
       </div>
-      <div style={{display:'flex',gap:6,marginBottom:10}}>
-        {['hat','poncho','pet'].map(c => (
-          <button key={c} onClick={() => { audio.tap(); setCat(c); }} style={{flex:1,padding:'10px 4px',borderRadius:12,fontSize:12,fontWeight:700,background: cat===c?'#7B3F00':'#FFE4B5',color: cat===c?'white':'#7B3F00',border:'none'}}>{c==='hat'?'Sombreros':c==='poncho'?'Ponchos':'Amigos'}</button>
+      <div style={{display:'flex',gap:4,marginBottom:10}}>
+        {['hat','poncho','pet','toy'].map(c => (
+          <button key={c} onClick={() => { audio.tap(); setCat(c); }} style={{flex:1,padding:'9px 2px',borderRadius:12,fontSize:11,fontWeight:700,background: cat===c?'#7B3F00':'#FFE4B5',color: cat===c?'white':'#7B3F00',border:'none'}}>{c==='hat'?'Sombreros':c==='poncho'?'Ropa':c==='pet'?'Amigos':'Juguetes'}</button>
         ))}
       </div>
       <div style={{display:'flex',flexDirection:'column',gap:8}}>
@@ -1632,61 +1645,92 @@ function MatchImage({ type }) {
   return null;
 }
 
-function CuyinDressed({ equipped={}, size=160 }) {
+function CuyinDressed({ equipped={}, size=160, mood='happy' }) {
   return (
-    <svg width={size} height={size*1.05} viewBox="0 0 200 220">
+    <svg width={size} height={size*1.05} viewBox="0 0 200 220" style={{filter:'drop-shadow(0 4px 8px rgba(0,0,0,0.1))'}}>
       {equipped.pet==='condor' && <Condor x={155} y={45} />}
       {equipped.pet==='fox' && <Fox x={155} y={165} />}
-      <path d="M 145 150 Q 158 138 152 158" stroke="#C89568" strokeWidth="8" fill="none" strokeLinecap="round" />
-      <ellipse cx="100" cy="160" rx="48" ry="36" fill="#D4A574" />
-      <rect x="72" y="185" width="14" height="28" fill="#C89568" rx="5" />
-      <rect x="114" y="185" width="14" height="28" fill="#C89568" rx="5" />
-      <ellipse cx="79" cy="213" rx="9" ry="4" fill="#2D2620" />
-      <ellipse cx="121" cy="213" rx="9" ry="4" fill="#2D2620" />
-      {equipped.poncho==='redPoncho' && (<><path d="M 60 130 L 140 130 L 150 180 L 50 180 Z" fill="#B8332F" /><line x1="55" y1="155" x2="145" y2="155" stroke="#F4CBA5" strokeWidth="2" /></>)}
-      {equipped.poncho==='pampaPoncho' && (<><path d="M 60 130 L 140 130 L 150 180 L 50 180 Z" fill="#8B7355" /><line x1="55" y1="145" x2="145" y2="145" stroke="#B8332F" strokeWidth="3" /><line x1="53" y1="160" x2="147" y2="160" stroke="#2D2620" strokeWidth="2" /></>)}
-      <ellipse cx="100" cy="115" rx="20" ry="36" fill="#D4A574" />
-      <ellipse cx="100" cy="78" rx="32" ry="30" fill="#D4A574" />
-      <ellipse cx="80" cy="50" rx="8" ry="17" fill="#D4A574" transform="rotate(-15 80 50)" />
-      <ellipse cx="120" cy="50" rx="8" ry="17" fill="#D4A574" transform="rotate(15 120 50)" />
-      <ellipse cx="100" cy="92" rx="18" ry="14" fill="#F4CBA5" />
-      <circle cx="88" cy="75" r="6" fill="#2D2620" />
-      <circle cx="112" cy="75" r="6" fill="#2D2620" />
-      <circle cx="90" cy="73" r="2" fill="white" />
-      <circle cx="114" cy="73" r="2" fill="white" />
-      <ellipse cx="76" cy="90" rx="7" ry="4" fill="#E89B9B" opacity="0.7" />
-      <ellipse cx="124" cy="90" rx="7" ry="4" fill="#E89B9B" opacity="0.7" />
-      <ellipse cx="100" cy="90" rx="4" ry="3" fill="#2D2620" />
-      <path d="M 92 98 Q 100 103 108 98" stroke="#2D2620" strokeWidth="2" fill="none" strokeLinecap="round" />
-      {equipped.hat==='gauchoHat' && (<><ellipse cx="100" cy="42" rx="50" ry="8" fill="#2D2620" /><ellipse cx="100" cy="35" rx="28" ry="15" fill="#2D2620" /></>)}
-      {equipped.hat==='redBeret' && (<><ellipse cx="100" cy="42" rx="35" ry="12" fill="#B8332F" /><ellipse cx="100" cy="39" rx="30" ry="8" fill="#D64A47" /><circle cx="100" cy="34" r="4" fill="#2D2620" /></>)}
-      {equipped.hat==='andeanCap' && (<><ellipse cx="100" cy="42" rx="33" ry="12" fill="#B8332F" /><path d="M 67 42 Q 62 55 65 68 L 75 65 Q 72 55 75 45 Z" fill="#B8332F" /><path d="M 133 42 Q 138 55 135 68 L 125 65 Q 128 55 125 45 Z" fill="#B8332F" /><ellipse cx="100" cy="35" rx="28" ry="8" fill="#F4A62A" /></>)}
+      {equipped.pet==='frog' && <Frog x={160} y={170} />}
+      {equipped.pet==='owl' && <Owl x={155} y={50} />}
+      {equipped.pet==='vizcacha' && <Vizcacha x={155} y={160} />}
+
+      <ellipse cx="55" cy="145" rx="12" ry="8" fill="#D4A574" transform="rotate(-20 55 145)"/>
+      <ellipse cx="42" cy="135" rx="8" ry="6" fill="#D4A574"/>
+      <path d="M 42 132 Q 30 118 22 128" stroke="#D4A574" fill="none" strokeWidth="7" strokeLinecap="round"/>
+      <ellipse cx="20" cy="126" rx="6" ry="5" fill="#C89568"/>
+
+      <path d="M 145 150 Q 158 138 152 158" stroke="#C89568" strokeWidth="8" fill="none" strokeLinecap="round"/>
+      <ellipse cx="100" cy="160" rx="48" ry="36" fill="#D4A574"/>
+      <ellipse cx="100" cy="155" rx="20" ry="12" fill="#F4CBA5" opacity="0.4"/>
+      <rect x="72" y="185" width="14" height="28" fill="#C89568" rx="5"/>
+      <rect x="114" y="185" width="14" height="28" fill="#C89568" rx="5"/>
+      <ellipse cx="79" cy="213" rx="9" ry="4" fill="#8B5A2B"/>
+      <ellipse cx="121" cy="213" rx="9" ry="4" fill="#8B5A2B"/>
+
+      {equipped.poncho==='redPoncho' && (<><path d="M 60 130 L 140 130 L 150 180 L 50 180 Z" fill="#B8332F"/><line x1="55" y1="155" x2="145" y2="155" stroke="#F4CBA5" strokeWidth="2"/></>)}
+      {equipped.poncho==='pampaPoncho' && (<><path d="M 60 130 L 140 130 L 150 180 L 50 180 Z" fill="#8B7355"/><line x1="55" y1="145" x2="145" y2="145" stroke="#B8332F" strokeWidth="3"/></>)}
+      {equipped.poncho==='blueVest' && (<><path d="M 70 128 L 130 128 L 135 175 L 65 175 Z" fill="#5D9EC7"/><line x1="100" y1="128" x2="100" y2="175" stroke="#B8E4F5" strokeWidth="2"/></>)}
+      {equipped.poncho==='heroCape' && (<><path d="M 70 125 L 130 125 L 145 195 L 55 195 Z" fill="#FFD700" opacity="0.85"/><circle cx="100" cy="150" r="8" fill="#B84A00"/></>)}
+
+      <ellipse cx="100" cy="115" rx="22" ry="38" fill="#D4A574"/>
+      <ellipse cx="100" cy="78" rx="34" ry="32" fill="#D4A574"/>
+
+      <ellipse cx="78" cy="48" rx="9" ry="18" fill="#D4A574" transform="rotate(-15 78 48)"/>
+      <ellipse cx="78" cy="40" rx="6" ry="8" fill="#E8BC8A" transform="rotate(-15 78 40)"/>
+      <ellipse cx="122" cy="48" rx="9" ry="18" fill="#D4A574" transform="rotate(15 122 48)"/>
+      <ellipse cx="122" cy="40" rx="6" ry="8" fill="#E8BC8A" transform="rotate(15 122 40)"/>
+
+      <ellipse cx="100" cy="92" rx="20" ry="16" fill="#F4CBA5"/>
+
+      <ellipse cx="86" cy="74" rx="9" ry="10" fill="white"/>
+      <circle cx="88" cy="74" r="6.5" fill="#2D2620"/>
+      <circle cx="90" cy="72" r="2.5" fill="white"/>
+      <circle cx="86" cy="76" r="1" fill="white" opacity="0.5"/>
+      <ellipse cx="114" cy="74" rx="9" ry="10" fill="white"/>
+      <circle cx="112" cy="74" r="6.5" fill="#2D2620"/>
+      <circle cx="114" cy="72" r="2.5" fill="white"/>
+      <circle cx="110" cy="76" r="1" fill="white" opacity="0.5"/>
+
+      <ellipse cx="74" cy="90" rx="10" ry="6" fill="#E89B9B" opacity="0.6"/>
+      <ellipse cx="126" cy="90" rx="10" ry="6" fill="#E89B9B" opacity="0.6"/>
+
+      <ellipse cx="100" cy="88" rx="5" ry="3.5" fill="#C89568"/>
+      <ellipse cx="100" cy="87" rx="3" ry="2" fill="#2D2620"/>
+
+      {mood==='happy' && <><path d="M 88 98 Q 100 110 112 98" stroke="#2D2620" strokeWidth="2.5" fill="none" strokeLinecap="round"/><path d="M 92 100 Q 100 107 108 100" fill="#E85D8F" opacity="0.4"/></>}
+      {mood==='celebrate' && <><path d="M 86 96 Q 100 112 114 96" stroke="#2D2620" strokeWidth="2.5" fill="#E85D8F" opacity="0.6" strokeLinecap="round"/></>}
+      {mood==='think' && <><path d="M 92 102 Q 100 98 108 102" stroke="#2D2620" strokeWidth="2" fill="none" strokeLinecap="round"/><path d="M 82 66 L 86 70 M 114 66 L 118 70" stroke="#2D2620" strokeWidth="1.5" strokeLinecap="round"/></>}
+      {mood==='sad' && <><path d="M 92 104 Q 100 98 108 104" stroke="#2D2620" strokeWidth="2" fill="none" strokeLinecap="round"/></>}
+      {mood==='surprise' && <><ellipse cx="100" cy="102" rx="6" ry="5" fill="#2D2620"/><ellipse cx="100" cy="101" rx="4" ry="3" fill="#E85D8F" opacity="0.5"/></>}
+
+      {equipped.hat==='gauchoHat' && (<><ellipse cx="100" cy="42" rx="50" ry="8" fill="#2D2620"/><ellipse cx="100" cy="35" rx="28" ry="15" fill="#2D2620"/></>)}
+      {equipped.hat==='redBeret' && (<><ellipse cx="100" cy="42" rx="35" ry="12" fill="#B8332F"/><ellipse cx="100" cy="39" rx="30" ry="8" fill="#D64A47"/><circle cx="100" cy="34" r="4" fill="#2D2620"/></>)}
+      {equipped.hat==='andeanCap' && (<><ellipse cx="100" cy="42" rx="33" ry="12" fill="#B8332F"/><path d="M 67 42 Q 62 55 65 68 L 75 65 Q 72 55 75 45 Z" fill="#B8332F"/><path d="M 133 42 Q 138 55 135 68 L 125 65 Q 128 55 125 45 Z" fill="#B8332F"/><ellipse cx="100" cy="35" rx="28" ry="8" fill="#F4A62A"/></>)}
+      {equipped.hat==='crown' && (<><rect x="75" y="30" width="50" height="18" rx="2" fill="#FFD700" stroke="#B87F00" strokeWidth="1"/><polygon points="80,30 85,20 90,30" fill="#FFD700" stroke="#B87F00" strokeWidth="1"/><polygon points="95,30 100,18 105,30" fill="#FFD700" stroke="#B87F00" strokeWidth="1"/><polygon points="110,30 115,20 120,30" fill="#FFD700" stroke="#B87F00" strokeWidth="1"/><circle cx="100" cy="36" r="3" fill="#E85D8F"/></>)}
+      {equipped.hat==='wizardHat' && (<><path d="M 70 48 Q 100 -10 130 48" fill="#5D9EC7"/><circle cx="100" cy="8" r="5" fill="white"/><ellipse cx="100" cy="48" rx="35" ry="6" fill="#5D9EC7"/></>)}
+      {equipped.hat==='explorerHelmet' && (<><ellipse cx="100" cy="42" rx="36" ry="14" fill="#7DA240"/><ellipse cx="100" cy="36" rx="30" ry="10" fill="#5D8233"/><rect x="90" y="28" width="20" height="10" fill="#7DA240" rx="2"/></>)}
+
+      {equipped.toy==='balloons' && (<><circle cx="155" cy="30" r="10" fill="#E85D8F" opacity="0.8"/><circle cx="170" cy="25" r="10" fill="#FFD700" opacity="0.8"/><circle cx="162" cy="15" r="10" fill="#5D9EC7" opacity="0.8"/><line x1="160" y1="35" x2="155" y2="60" stroke="#999" strokeWidth="0.8"/></>)}
+      {equipped.toy==='star' && (<><polygon points="35,30 38,22 44,22 39,17 41,10 35,14 29,10 31,17 26,22 32,22" fill="#FFD700" stroke="#B87F00" strokeWidth="0.5"><animateTransform attributeName="transform" type="rotate" values="0 35 20;15 35 20;0 35 20;-15 35 20;0 35 20" dur="3s" repeatCount="indefinite"/></polygon></>)}
+      {equipped.toy==='chest' && (<><rect x="145" y="185" width="22" height="16" rx="2" fill="#D64A2C"/><rect x="148" y="189" width="16" height="8" rx="1" fill="#F08060"/><circle cx="156" cy="183" r="3" fill="#FFD700"/></>)}
     </svg>
   );
 }
 
 function Condor({ x, y }) {
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <ellipse cx="0" cy="0" rx="18" ry="10" fill="#2D2620" />
-      <path d="M -22 -4 Q -14 -18 -4 -4" fill="#2D2620" />
-      <path d="M 4 -4 Q 14 -18 22 -4" fill="#2D2620" />
-      <circle cx="-6" cy="-3" r="5" fill="#F4CBA5" />
-      <circle cx="-7" cy="-3" r="1.5" fill="#2D2620" />
-    </g>
-  );
+  return (<g transform={`translate(${x}, ${y})`}><ellipse cx="0" cy="0" rx="18" ry="10" fill="#2D2620"/><path d="M -22 -4 Q -14 -18 -4 -4" fill="#2D2620"/><path d="M 4 -4 Q 14 -18 22 -4" fill="#2D2620"/><circle cx="-6" cy="-3" r="5" fill="#F4CBA5"/><circle cx="-7" cy="-3" r="1.5" fill="#2D2620"/></g>);
 }
-
 function Fox({ x, y }) {
-  return (
-    <g transform={`translate(${x}, ${y})`}>
-      <ellipse cx="0" cy="6" rx="16" ry="9" fill="#D4693A" />
-      <path d="M -10 -4 L -5 -15 L 0 0 Z" fill="#D4693A" />
-      <path d="M 10 -4 L 5 -15 L 0 0 Z" fill="#D4693A" />
-      <circle cx="-4" cy="0" r="1.5" fill="#2D2620" />
-      <circle cx="4" cy="0" r="1.5" fill="#2D2620" />
-    </g>
-  );
+  return (<g transform={`translate(${x}, ${y})`}><ellipse cx="0" cy="6" rx="16" ry="9" fill="#D4693A"/><path d="M -10 -4 L -5 -15 L 0 0 Z" fill="#D4693A"/><path d="M 10 -4 L 5 -15 L 0 0 Z" fill="#D4693A"/><circle cx="-4" cy="0" r="1.5" fill="#2D2620"/><circle cx="4" cy="0" r="1.5" fill="#2D2620"/><path d="M -2 4 Q 0 6 2 4" stroke="#2D2620" strokeWidth="0.8" fill="none"/></g>);
+}
+function Frog({ x, y }) {
+  return (<g transform={`translate(${x}, ${y})`}><circle cx="0" cy="0" rx="12" ry="10" fill="#7DA240"/><circle cx="-5" cy="-5" r="3" fill="#2D2620"/><circle cx="5" cy="-5" r="3" fill="#2D2620"/><circle cx="-4" cy="-6" r="1" fill="white"/><circle cx="6" cy="-6" r="1" fill="white"/><path d="M -3 3 Q 0 6 3 3" stroke="#2D2620" strokeWidth="1" fill="none"/></g>);
+}
+function Owl({ x, y }) {
+  return (<g transform={`translate(${x}, ${y})`}><ellipse cx="0" cy="5" rx="14" ry="10" fill="#8B5A2B"/><ellipse cx="0" cy="-2" rx="11" ry="9" fill="#A0724A"/><circle cx="-5" cy="-3" r="4" fill="white"/><circle cx="5" cy="-3" r="4" fill="white"/><circle cx="-5" cy="-3" r="2" fill="#2D2620"/><circle cx="5" cy="-3" r="2" fill="#2D2620"/><polygon points="0,1 -2,4 2,4" fill="#D4693A"/><path d="M -8 -8 L -5 -4 M 8 -8 L 5 -4" stroke="#A0724A" strokeWidth="2"/></g>);
+}
+function Vizcacha({ x, y }) {
+  return (<g transform={`translate(${x}, ${y})`}><ellipse cx="0" cy="5" rx="12" ry="8" fill="#D4A574"/><ellipse cx="0" cy="-3" rx="9" ry="8" fill="#E8BC8A"/><circle cx="-4" cy="-4" r="2" fill="#2D2620"/><circle cx="4" cy="-4" r="2" fill="#2D2620"/><ellipse cx="0" cy="0" rx="2.5" ry="1.5" fill="#C89568"/><path d="M -6 -10 Q -8 -18 -4 -15 M 6 -10 Q 8 -18 4 -15" stroke="#E8BC8A" strokeWidth="2" fill="none"/></g>);
 }
 
 function Grape({ small=false, size }) {
@@ -1707,13 +1751,24 @@ function Grape({ small=false, size }) {
 
 function ItemPreview({ item }) {
   const svgs = {
-    gauchoHat: <><ellipse cx="20" cy="26" rx="18" ry="4" fill="#2D2620" /><ellipse cx="20" cy="20" rx="10" ry="8" fill="#2D2620" /></>,
-    redBeret: <><ellipse cx="20" cy="24" rx="15" ry="7" fill="#B8332F" /><ellipse cx="20" cy="20" rx="13" ry="5" fill="#D64A47" /><circle cx="20" cy="15" r="2" fill="#2D2620" /></>,
-    andeanCap: <><ellipse cx="20" cy="24" rx="15" ry="7" fill="#B8332F" /><ellipse cx="20" cy="18" rx="12" ry="4" fill="#F4A62A" /><path d="M 8 24 L 6 34 L 12 32 Z" fill="#B8332F" /><path d="M 32 24 L 34 34 L 28 32 Z" fill="#B8332F" /></>,
-    redPoncho: <><path d="M 10 12 L 30 12 L 34 32 L 6 32 Z" fill="#B8332F" /><line x1="7" y1="22" x2="33" y2="22" stroke="#F4CBA5" strokeWidth="1.5" /></>,
-    pampaPoncho: <><path d="M 10 12 L 30 12 L 34 32 L 6 32 Z" fill="#8B7355" /><line x1="7" y1="18" x2="33" y2="18" stroke="#B8332F" strokeWidth="2" /></>,
-    condor: <><ellipse cx="20" cy="22" rx="10" ry="6" fill="#2D2620" /><path d="M 6 20 Q 12 12 18 20" fill="#2D2620" /><path d="M 22 20 Q 28 12 34 20" fill="#2D2620" /><circle cx="16" cy="18" r="4" fill="#F4CBA5" /></>,
-    fox: <><ellipse cx="20" cy="24" rx="12" ry="8" fill="#D4693A" /><path d="M 10 20 L 14 12 L 16 22 Z" fill="#D4693A" /><path d="M 30 20 L 26 12 L 24 22 Z" fill="#D4693A" /><circle cx="16" cy="22" r="1.5" fill="#2D2620" /><circle cx="24" cy="22" r="1.5" fill="#2D2620" /></>,
+    gauchoHat: <><ellipse cx="20" cy="26" rx="18" ry="4" fill="#2D2620"/><ellipse cx="20" cy="20" rx="10" ry="8" fill="#2D2620"/></>,
+    redBeret: <><ellipse cx="20" cy="24" rx="15" ry="7" fill="#B8332F"/><ellipse cx="20" cy="20" rx="13" ry="5" fill="#D64A47"/><circle cx="20" cy="15" r="2" fill="#2D2620"/></>,
+    andeanCap: <><ellipse cx="20" cy="24" rx="15" ry="7" fill="#B8332F"/><ellipse cx="20" cy="18" rx="12" ry="4" fill="#F4A62A"/></>,
+    crown: <><rect x="8" y="18" width="24" height="12" rx="2" fill="#FFD700" stroke="#B87F00" strokeWidth="0.8"/><polygon points="12,18 15,10 18,18" fill="#FFD700"/><polygon points="18,18 20,8 22,18" fill="#FFD700"/><polygon points="24,18 27,10 30,18" fill="#FFD700"/><circle cx="20" cy="22" r="2" fill="#E85D8F"/></>,
+    wizardHat: <><path d="M8 30 Q20 2 32 30" fill="#5D9EC7"/><circle cx="20" cy="8" r="3" fill="white"/><ellipse cx="20" cy="30" rx="14" ry="4" fill="#5D9EC7"/></>,
+    explorerHelmet: <><ellipse cx="20" cy="24" rx="16" ry="8" fill="#7DA240"/><ellipse cx="20" cy="20" rx="14" ry="6" fill="#5D8233"/></>,
+    redPoncho: <><path d="M10 12 L30 12 L34 32 L6 32 Z" fill="#B8332F"/><line x1="7" y1="22" x2="33" y2="22" stroke="#F4CBA5" strokeWidth="1.5"/></>,
+    pampaPoncho: <><path d="M10 12 L30 12 L34 32 L6 32 Z" fill="#8B7355"/><line x1="7" y1="18" x2="33" y2="18" stroke="#B8332F" strokeWidth="2"/></>,
+    blueVest: <><rect x="10" y="12" width="20" height="18" rx="2" fill="#5D9EC7"/><line x1="20" y1="12" x2="20" y2="30" stroke="#B8E4F5" strokeWidth="1.5"/></>,
+    heroCape: <><path d="M12 14 L28 14 L32 34 L8 34 Z" fill="#FFD700" opacity="0.9"/><circle cx="20" cy="22" r="4" fill="#B84A00"/></>,
+    condor: <><ellipse cx="20" cy="22" rx="10" ry="6" fill="#2D2620"/><path d="M6 20 Q12 12 18 20" fill="#2D2620"/><path d="M22 20 Q28 12 34 20" fill="#2D2620"/><circle cx="16" cy="18" r="4" fill="#F4CBA5"/></>,
+    fox: <><ellipse cx="20" cy="24" rx="12" ry="8" fill="#D4693A"/><path d="M10 20 L14 12 L16 22 Z" fill="#D4693A"/><path d="M30 20 L26 12 L24 22 Z" fill="#D4693A"/><circle cx="16" cy="22" r="1.5" fill="#2D2620"/><circle cx="24" cy="22" r="1.5" fill="#2D2620"/></>,
+    frog: <><circle cx="20" cy="22" r="10" fill="#7DA240"/><circle cx="16" cy="18" r="2.5" fill="#2D2620"/><circle cx="24" cy="18" r="2.5" fill="#2D2620"/><path d="M17 26 Q20 29 23 26" stroke="#2D2620" strokeWidth="1" fill="none"/></>,
+    owl: <><ellipse cx="20" cy="24" rx="12" ry="9" fill="#8B5A2B"/><circle cx="16" cy="20" r="4" fill="white"/><circle cx="24" cy="20" r="4" fill="white"/><circle cx="16" cy="20" r="2" fill="#2D2620"/><circle cx="24" cy="20" r="2" fill="#2D2620"/><polygon points="20,23 18,26 22,26" fill="#D4693A"/></>,
+    vizcacha: <><ellipse cx="20" cy="24" rx="10" ry="7" fill="#D4A574"/><ellipse cx="20" cy="18" rx="8" ry="7" fill="#E8BC8A"/><circle cx="17" cy="17" r="1.5" fill="#2D2620"/><circle cx="23" cy="17" r="1.5" fill="#2D2620"/></>,
+    balloons: <><circle cx="14" cy="16" r="7" fill="#E85D8F" opacity="0.8"/><circle cx="26" cy="14" r="7" fill="#FFD700" opacity="0.8"/><circle cx="20" cy="10" r="7" fill="#5D9EC7" opacity="0.8"/><line x1="18" y1="22" x2="16" y2="34" stroke="#999" strokeWidth="0.5"/></>,
+    star: <><polygon points="20,6 23,16 34,16 25,22 28,32 20,26 12,32 15,22 6,16 17,16" fill="#FFD700" stroke="#B87F00" strokeWidth="0.8"/></>,
+    chest: <><rect x="8" y="16" width="24" height="16" rx="3" fill="#D64A2C"/><rect x="11" y="20" width="18" height="8" rx="1" fill="#F08060"/><circle cx="20" cy="14" r="3" fill="#FFD700"/></>,
   };
   return <svg width={40} height={40} viewBox="0 0 40 40">{svgs[item.id]}</svg>;
 }
